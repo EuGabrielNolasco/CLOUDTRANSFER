@@ -1,21 +1,10 @@
 // src/Views/Menu/ModalEnvioItens.js
 import React, { useState } from 'react';
-import { getAuth } from 'firebase/auth';
 
-const ModalEnvioItens = ({ onClose, files }) => {
+const ModalEnvioItens = ({ onClose, files, selectedFiles }) => {
     const [email, setEmail] = useState('');
     const [uploadError, setUploadError] = useState('');
-    const [selectedFiles, setSelectedFiles] = useState({});
-
-    // Função fictícia para simular o envio de email
-    const sendEmail = async (emailData) => {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                // Simulando sucesso
-                resolve();
-            }, 1000);
-        });
-    };
+    const filesToSend = Object.keys(selectedFiles).filter(fileId => selectedFiles[fileId]);
 
     const handleSendEmail = async () => {
         const filesToSend = Object.keys(selectedFiles).filter(fileId => selectedFiles[fileId]);
@@ -25,20 +14,31 @@ const ModalEnvioItens = ({ onClose, files }) => {
             return;
         }
 
-        const emailData = {
-            to: email,
-            files: filesToSend.map(fileId => files.find(file => file.id === fileId)),
-        };
+        const formData = new FormData();
+        filesToSend.forEach(fileId => {
+            const file = files.find(f => f.id === fileId);
+            formData.append('files', file); // Supondo que você tenha o arquivo real aqui
+        });
+        formData.append('to', email);
 
         try {
-            await sendEmail(emailData); // Chamando a função fictícia
-            alert('Email enviado com sucesso!');
+            const response = await fetch('http://localhost:8080/share', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error('Falha ao compartilhar arquivos');
+            }
+
+            const result = await response.json();
+            alert(result.message);
             onClose();
-            setSelectedFiles({});
         } catch (error) {
             alert('Falha ao enviar o email: ' + error.message);
         }
     };
+
 
     return (
         <>
@@ -70,6 +70,7 @@ const ModalEnvioItens = ({ onClose, files }) => {
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
                             </div>
+                            {uploadError && <p className="text-red-500 text-xs">{uploadError}</p>}
                         </div>
                         <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                             <button

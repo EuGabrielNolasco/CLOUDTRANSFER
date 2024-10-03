@@ -3,14 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { storage } from '../../firebase';
 import { ref, uploadBytes, listAll, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
-import ModalEnvioItens from './ModalEnvioItens'; 
+import ModalEnvioItens from './ModalEnvioItens';
 
 const Table = () => {
     const [file, setFile] = useState(null);
     const [uploadError, setUploadError] = useState('');
-    const [files, setFiles] = useState([]);
     const [selectedFiles, setSelectedFiles] = useState({});
     const [showModal, setShowModal] = useState(false);
+    const [files, setFiles] = useState([]); // Adicionado o estado para 'files'
     const auth = getAuth();
     const userId = auth.currentUser ? auth.currentUser.uid : null;
 
@@ -192,8 +192,9 @@ const Table = () => {
             </div>
             {showModal && (
                 <ModalEnvioItens
-                    onClose={() => setShowModal(false)} // Passando a função para fechar a modal
+                    onClose={() => setShowModal(false)}
                     files={files}
+                    selectedFiles={selectedFiles}
                 />
             )}
         </>
